@@ -3,9 +3,6 @@
 #include <string.h>
 #include <sys/stat.h>
 
-int MAX_NUMBRE_FILE = 100;
-
-
 
 int stat_file(const char* name){
 	struct stat stat_file;
@@ -20,6 +17,16 @@ int stat_file(const char* name){
 	}
 }
 
+int extension_file(const char* name){
+	const char* ext = strrchr(name, '.');
+	if(!ext){
+		
+	}
+	else{
+		printf("extension is %s\n", ext +1); /* comprendre ext +1*/
+	}	
+
+}
 int ls(const char* name){
 	DIR* dir = opendir(name);
 	printf("Reading files in: %s\n", name);
@@ -31,13 +38,7 @@ int ls(const char* name){
 	while(entity != NULL ){
 		printf("%d %s\n", entity->d_type , entity->d_name);
 		stat_file(entity->d_name);
-		const char* ext = strrchr(entity->d_name, '.');
-		if(!ext){
-		
-		}
-		else{
-			printf("extension is %s\n", ext +1);
-		}
+		extension_file(entity->d_name);
 		/* problème gestion d_type, ne donne que 8 et 4 et pas le reste*/
 		if (entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0){
 			char path[100] = {0};    /*Peut-être une alocation dynamique si possible*/
