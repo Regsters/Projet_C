@@ -1,3 +1,8 @@
+/*Julien MAES*/
+/*Hugo MAGERAT*/
+/*FIPS 197*/
+
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -14,14 +19,7 @@
     
     
   key:
-    2b7e151628aed2a6abf7158809cf4f3c
-*/
-char key_line[32]= "2b7e151628aed2a6abf7158809cf4f3c";  /*clé en tableau linéaire, sera tranformé en tableau dimensionnel(2)*/
-
-/* on devra créé une fonction pour séparer en bloc de 32 hexa le plaintext*/
-char plaintext_line[32] = "6bc1bee22e409f96e93d7e117393172a"; /*en tableau linéaire, sera tranformé en tableau dimensionnel(2)*/
-
-char ciphertext_dim[4][4];
+    2b7e151628aed2a6abf7158809cf4f3c*/
 
 static const uint8_t sbox[256] = {
   //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -42,27 +40,36 @@ static const uint8_t sbox[256] = {
   0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
   0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
 
-void subBytes(){
-	char key_dim[4][4]; /* on crée un tableau 4x4 pour mieux travailler avec aes*/
+void subBytes(uint8_t* plaintext_line){
+	/* on crée un tableau 4x4 pour mieux travailler avec aes*/
 	int i,j,a;
 	a=0;
-	for (i=0; i<4; i++){
-		for (j=0 ; j<4; j++){
-			key_dim[i][j] = key_line[a];
-			a++;}
-	}
-	char plaintext_dim[4][4]; 
+	char ciphertext_dim[4][4]; 
 	a=0;
 	for (i=0; i<4; i++){
 		for (j=0 ; j<4; j++){
-			plaintext_dim[i][j] = plaintext_line[a];
+			ciphertext_dim[i][j] = plaintext_line[a];
 			a++;}
 	}
-	return;
+	for (i=0; i<4; i++){
+		for (j=0 ; j<4; j++){
+			ciphertext_dim[i][j] = sbox[(int)ciphertext_dim[i][j]];
+		}
+	}
 }
 
 void main(){
-	subBytes();
+	uint8_t plaintext_line[16] = {0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a};
+	uint8_t key_line[16] = {0x2b, 0x7e, 0x15, 0x16, 0x2c, 0x8a, 0xed, 0x2a, 0x6a, 0xbf, 0x71, 0x58, 0x80, 0x9c, 0xf4, 0xf3};
+	char key_dim[4][4]; 
+	int a = 0;
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			key_dim[i][j] = key_line[a];
+			a++;
+			}
+	}
+	subBytes(plaintext_line);
 }
 
 
