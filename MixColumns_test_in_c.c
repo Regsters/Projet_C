@@ -24,7 +24,7 @@
     
 void Mixcolumns(uint8_t* plaintext_line){
 	uint8_t ciphertext_dim[4][4];
-	int i,j,a;
+	int i,j,a,k;
 	a=0;
 	for (i=0; i<4; i++){
 		for (j=0 ; j<4; j++){
@@ -32,48 +32,46 @@ void Mixcolumns(uint8_t* plaintext_line){
 			a++;}			
 	}
 	uint8_t Rijndael_matrix[16]= {2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2};
-	/*1*/ /*uint8_t un = ciphertext_dim[0][0]^Rijndael_matrix[0]; /*multiplication par 2 peut etre representer par cette methode*/
-	/*3*/ /* *1 donc égal à lui même*/	
-	uint8_t pending[16];
+	uint8_t pending[64];
 	a=0;
-	for (i=0; i<1; i++){
-		for (j=0 ; j<4; j++){
-			if ( Rijndael_matrix[a] == 1){
-					pending[a] = ciphertext_dim[j][0];}
+	for (k=0; k<4; k++){
+		int b=0;
+		for (i=0; i<4; i++){
+			for (j=0 ; j<4; j++){
+				if ( Rijndael_matrix[b] == 1){
+						pending[a] = ciphertext_dim[j][k];}
+					
+				if ( Rijndael_matrix[b] == 2){
+						unsigned result = ((ciphertext_dim[j][k])<<1);
+						if ((ciphertext_dim[j][k]>>4)>=8){
+						/*attention si le byte a un 1 au debut, il faut shifter et XOR avec 0x1b*/
+							pending[a] = result^(0x1B);
+						}
+						else{
+							pending[a] = result;
+						}
+				}		
+				if ( Rijndael_matrix[b] == 3){
+						unsigned result = ((ciphertext_dim[j][k])<<1);
+						if ((ciphertext_dim[j][k]>>4)>=0x8){
+						/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XOR avec 0x1b*/
+							pending[a] = (result)^(0x1B)^(ciphertext_dim[j][k]);
+						}
+						else{
+							pending[a] = (result)^(ciphertext_dim[j][k]);
+						}
 				
-			if ( Rijndael_matrix[a] == 2){
-					unsigned result = ((ciphertext_dim[j][0])<<1);
-					if ((ciphertext_dim[j][0]>>4)>=8){
-					/*attention si le byte a un 1 au debut, il faut shifter et XOR avec 0x1b*/
-						pending[a] = result^(0x1B);
-					}
-					else{
-						pending[a] = result;
-					}
-			}		
-			if ( Rijndael_matrix[a] == 3){
-					unsigned result = ((ciphertext_dim[j][0])<<1);
-					if ((ciphertext_dim[j][0]>>4)>=0x8){
-					/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XOR avec 0x1b*/
-						pending[a] = (result)^(0x1B)^(ciphertext_dim[j][0]);
-					}
-					else{
-						pending[a] = (result)^(ciphertext_dim[j][0]);
-					}
-			
+				}
+				a++;
+				b++;
 			}
-			a++;
 		}
 	}
-	printf("%hhx\n", pending[0]);
-	printf("%hhx\n", pending[1]);
-	printf("%hhx\n", pending[2]);
-	printf("%hhx\n", pending[3]);
-	a=0;
-	for (i=0; i<4; i++){
+	for (j=0; j<4; j++){
+		for (i=0; i<4; i++){/*attention*/
 
-		ciphertext_dim[i][a] = pending[(i*4)]^pending[((i*4)+1)]^pending[((i*4)+2)]^pending[((i*4)+3)];
-		a++;
+			ciphertext_dim[i][j] = pending[(i*4)+(j*16)]^pending[((i*4)+(j*16)+1)]^pending[((i*4)+(j*16)+2)]^pending[((i*4)+(j*16)+3)];
+		}
 	}
 }	
 
