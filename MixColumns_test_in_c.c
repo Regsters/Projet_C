@@ -32,32 +32,56 @@ void Mixcolumns(uint8_t* plaintext_line){
 			a++;}			
 	}
 	uint8_t Rijndael_matrix[16]= {2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2};
-	
 	/*1*/ /*uint8_t un = ciphertext_dim[0][0]^Rijndael_matrix[0]; /*multiplication par 2 peut etre representer par cette methode*/
-	/*2*/ /*uint8_t deux = (ciphertext_dim[1][0]*2)^(ciphertext_dim[1][0]);*/
 	/*3*/ /* *1 donc égal à lui même*/	
 	uint8_t pending[16];
 	a=0;
-	for (i=0; i<4; i++){
+	for (i=0; i<1; i++){
 		for (j=0 ; j<4; j++){
 			if ( Rijndael_matrix[a] == 1){
-					pending[a] = ciphertext_dim[j][i];}
+					pending[a] = ciphertext_dim[j][0];}
 				
 			if ( Rijndael_matrix[a] == 2){
-					pending[a] = ciphertext_dim[j][i]^(2);}
+					unsigned result = ((ciphertext_dim[j][0])<<1);
+					if ((ciphertext_dim[j][0]>>4)>=8){
+					/*attention si le byte a un 1 au debut, il faut shifter et XOR avec 0x1b*/
+						pending[a] = result^(0x1B);
+					}
+					else{
+						pending[a] = result;
+					}
+			}		
 			if ( Rijndael_matrix[a] == 3){
-					pending[a] = (ciphertext_dim[j][i]*2)^(ciphertext_dim[j][i]);}
-			a++;
+					unsigned result = ((ciphertext_dim[j][0])<<1);
+					if ((ciphertext_dim[j][0]>>4)>=0x8){
+					/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XOR avec 0x1b*/
+						pending[a] = (result)^(0x1B)^(ciphertext_dim[j][0]);
+					}
+					else{
+						pending[a] = (result)^(ciphertext_dim[j][0]);
+					}
 			
+			}
+			a++;
 		}
+	}
+	printf("%hhx\n", pending[0]);
+	printf("%hhx\n", pending[1]);
+	printf("%hhx\n", pending[2]);
+	printf("%hhx\n", pending[3]);
+	a=0;
+	for (i=0; i<4; i++){
+
+		ciphertext_dim[i][a] = pending[(i*4)]^pending[((i*4)+1)]^pending[((i*4)+2)]^pending[((i*4)+3)];
+		a++;
 	}
 }	
 
 void main(){
-	uint8_t plaintext_line[16] = {0x6b, 0xc1, 0xbe, 0xe2,
-				      0x2e, 0x40, 0x9f, 0x96,
-				      0xe9, 0x3d, 0x7e, 0x11,
-				      0x73, 0x93, 0x17, 0x2a};
+	uint8_t plaintext_line[16] = {0xd4, 0xbf, 0x5d, 0x30,
+				      0xbf, 0x40, 0x9f, 0x96,
+				      0x5d, 0x3d, 0x7e, 0x11,
+				      0x30, 0x93, 0x17, 0x2a};
 	uint8_t key_line[16] = {0x2b, 0x7e, 0x15, 0x16, 0x2c, 0x8a, 0xed, 0x2a, 0x6a, 0xbf, 0x71, 0x58, 0x80, 0x9c, 0xf4, 0xf3};
 	char key_dim[4][4]; 
 	int a = 0;
