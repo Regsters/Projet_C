@@ -1,19 +1,13 @@
+/*Julien MAES*/
+/*Hugo MAGERAT*/
+/*FIPS 197*/
+/* angelfire.com/biz7/atleast/mix_columns.pdf*//*fut très TRES utile pour comprendre*/
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
 
-/*
-  plain-text:
-    6bc1bee22e409f96e93d7e117393172a
-    ae2d8a571e03ac9c9eb76fac45af8e51
-    30c81c46a35ce411e5fbc1191a0a52ef
-    f69f2445df4f9b17ad2b417be66c3710
-    
-    
-  key:
-    2b7e151628aed2a6abf7158809cf4f3c
-*/
 
 static const uint8_t sbox[256] = {
   //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -33,33 +27,131 @@ static const uint8_t sbox[256] = {
   0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
   0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
   0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
-
-void AddRoundKey(){
+  
+void Key_schedule(){
 	return;
 }
 
-void SubBytes(){
-	return;
+
+void AddRoundKey(uint8_t* plaintext_dim, uint8_t* key_dim){
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			plaintext_dim[i][j] = plaintext_dim[i][j] ^key_dim[i][j];
+		}
+	}
 }
 
-void ShiftRows(){
-	return;
+void SubBytes(uint8_t* plaintext_dim){
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			plaintext_dim[i][j] = sbox[(int)ciphertext_dim[i][j]];
+		}
+	}
+}
+
+void ShiftRows(uint8_t* plaintext_dim){ /* a tester*/
+	uint8_t pending_dim[4][4];
+	for (int i=0; i<4; i++){
+		int a =0;
+		for (int j=0 ; j<4; j++){
+			if (j+i<4){
+				pending_dim[i][j] = plaintext_dim[i][(j+i)]
+			}
+			else{
+				pending_dim[i][j] = plaintext_dim[i][a];
+				a++;
+			}		
+		}
+	}
 }
 
 void MixColoumns(){
-	return;
+	uint8_t Rijndael_matrix[16]= {2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2};
+	uint8_t pending[64];
+	int a=0;
+	for (int k=0; k<4; k++){
+		int b=0;
+		for (int i=0; i<4; i++){
+			for (int j=0 ; j<4; j++){
+				if ( Rijndael_matrix[b] == 1){
+						pending[a] = plaintext_dim[j][k];}
+					
+				if ( Rijndael_matrix[b] == 2){
+						unsigned result = ((plaintext_dim[j][k])<<1);
+						if ((plaintext_dim[j][k]>>4)>=8){
+						/*attention si le byte a un 1 au debut, il faut shifter et XORer avec 0x1b*/
+							pending[a] = result^(0x1B);
+						}
+						else{
+							pending[a] = result;
+						}
+				}		
+				if ( Rijndael_matrix[b] == 3){
+						unsigned result = ((plaintext_dim[j][k])<<1);
+						if ((plaintext_dim[j][k]>>4)>=0x8){
+						/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XORer avec 0x1b*/
+							pending[a] = (result)^(0x1B)^(plaintext_dim[j][k]);
+						}
+						else{
+							pending[a] = (result)^(plaintext_dim[j][k]);
+						}
+				
+				}
+				a++;
+				b++;
+			}
+		}
+	}
+	for (j=0; j<4; j++){
+		for (i=0; i<4; i++){/*attention*/
+			plaintext_dim[i][j] = pending[(i*4)+(j*16)]^pending[((i*4)+(j*16)+1)]^pending[((i*4)+(j*16)+2)]^pending[((i*4)+(j*16)+3)];
+		}
+	}
 }
 
 void main(){
-	AddRoundKey();
-	for ( int i = 0; i<4 ; i++){
-		SubBytes();
-		ShiftRows();
-		MixColoumns();
-		AddRoundKey();}
-	SubBytes();
-	ShiftRows();	
-	AddRoundKey();
+	uint8_t key_line[16] = {0x2b, 0x7e, 0x15, 0x16,
+				0x2c, 0x8a, 0xed, 0x2a,
+				0x6a, 0xbf, 0x71, 0x58,
+				0x80, 0x9c, 0xf4, 0xf3};
+				
+	int8_t plaintext_line[16] = {0x6b, 0xc1, 0xbe, 0xe2,
+				     0x2e, 0x40, 0x9f, 0x96,
+				     0xe9, 0x3d, 0x7e, 0x11,
+				     0x73, 0x93, 0x17, 0x2a};
+	/* ceci est le format espéré en sortie de fichier quand on appelera AES*/			
+
+	uint8_t key_dim[4][4]; 
+	int a = 0;
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			key_dim[i][j] = key_line[a];
+			a++;
+			}
+	}
+
+	uint8_t plaintext_dim[4][4]; 
+	int a = 0;
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			kplaintext_dim[i][j] = plaintext_line[a];
+			a++;
+			}
+	}
+
+
+	AddRoundKey(plaintext_dim, key_dim);
+	for ( int i = 0; i<9 ; i++){
+		SubBytes(plaintext_dim);
+		ShiftRows(plaintext_dim);
+		MixColoumns(plaintext_dim);
+		Key_schedule(key_dim);
+		AddRoundKey(plaintext_dim, key_dim);}
+	SubBytes(plaintext_dim);
+	ShiftRows(plaintext_dim);	
+	Key_schedule(key_dim);
+	AddRoundKey(plaintext_dim, key_dim);
+	
 }
 
 
