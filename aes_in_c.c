@@ -8,7 +8,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-
+static int  round = 0;
 static const uint8_t sbox[256] = {
   //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
   0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -28,7 +28,33 @@ static const uint8_t sbox[256] = {
   0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
   0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
   
-void Key_schedule(){
+static const uint8_t Rcon[10][4] = {{0x01,0x00, 0x00, 0x00},{0x02,0x00, 0x00, 0x00},{0x04,0x00, 0x00, 0x00},{0x08,0x00, 0x00, 0x00},{0x10,0x00, 0x00, 0x00},{0x20,0x00, 0x00, 0x00},{0x40,0x00, 0x00, 0x00},{0x80,0x00, 0x00, 0x00},{0x1b,0x00, 0x00, 0x00},{0x36,0x00, 0x00, 0x00}};
+  
+void Key_schedule(uint8_t* key_dim){
+	uint8_t W0[4] = {key_dim[0][0], key_dim[1][0], key_dim[2][0], key_dim[3][0]};
+	uint8_t W1[4] = {key_dim[0][1], key_dim[1][1], key_dim[2][1], key_dim[3][1]};
+	uint8_t W2[4] = {key_dim[0][2], key_dim[1][2], key_dim[2][2], key_dim[3][2]};
+	uint8_t W3[4] = {key_dim[0][3], key_dim[1][3], key_dim[2][3], key_dim[3][3]};
+	uint8_t W4[4] = {key_dim[1][3], key_dim[2][3], key_dim[3][3], key_dim[0][3]};
+	uint8_t W5[4];
+	uint8_t W6[4];
+	uint8_t W7[4];
+	for (int i=0; i<4; i++){
+		W4[i] =  sbox[(int)plaintext_dim[i]];
+	}
+	for (int i=0; i<4; i++){
+		W4[i] = W4[i]^W0^Rcon[round][i];
+	}
+	for (int i=0; i<4; i++){
+		W5[i] = W4[i]^W1[i];
+		W6[i] = W5[i]^W2[i];
+		W7[i] = W6[i]^W3[i];
+	}
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			key_dim[i][j] = ;
+		}
+	}
 	return;
 }
 
@@ -44,7 +70,7 @@ void AddRoundKey(uint8_t* plaintext_dim, uint8_t* key_dim){
 void SubBytes(uint8_t* plaintext_dim){
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			plaintext_dim[i][j] = sbox[(int)ciphertext_dim[i][j]];
+			plaintext_dim[i][j] = sbox[(int)plaintext_dim[i][j]];
 		}
 	}
 }
@@ -61,6 +87,11 @@ void ShiftRows(uint8_t* plaintext_dim){ /* a tester*/
 				pending_dim[i][j] = plaintext_dim[i][a];
 				a++;
 			}		
+		}
+	}
+	for (i=0; i<4; i++){
+		for (j=0 ; j<4; j++){
+			plaintext_dim[i][j] = pending_dim[i][j];
 		}
 	}
 }
