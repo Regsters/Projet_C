@@ -192,7 +192,7 @@ void main(){
 
 
 	AddRoundKey(&plaintext_dim, &key_dim); /*ok*/
-	for ( int i = 0; i<1 ; i++){
+	for ( int i = 0; i<9 ; i++){
 		SubBytes(&plaintext_dim); /*ok*/
 		ShiftRows(&plaintext_dim); /*ok*/
 		MixColoumns(&plaintext_dim); /*ok*/
