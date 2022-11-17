@@ -30,73 +30,91 @@ static const uint8_t sbox[256] = {
   
 static const uint8_t Rcon[10][4] = {{0x01,0x00, 0x00, 0x00},{0x02,0x00, 0x00, 0x00},{0x04,0x00, 0x00, 0x00},{0x08,0x00, 0x00, 0x00},{0x10,0x00, 0x00, 0x00},{0x20,0x00, 0x00, 0x00},{0x40,0x00, 0x00, 0x00},{0x80,0x00, 0x00, 0x00},{0x1b,0x00, 0x00, 0x00},{0x36,0x00, 0x00, 0x00}};
   
-void Key_schedule(uint8_t* key_dim){
-	uint8_t W0[4] = {key_dim[0][0], key_dim[1][0], key_dim[2][0], key_dim[3][0]};
-	uint8_t W1[4] = {key_dim[0][1], key_dim[1][1], key_dim[2][1], key_dim[3][1]};
-	uint8_t W2[4] = {key_dim[0][2], key_dim[1][2], key_dim[2][2], key_dim[3][2]};
-	uint8_t W3[4] = {key_dim[0][3], key_dim[1][3], key_dim[2][3], key_dim[3][3]};
-	uint8_t W4[4] = {key_dim[1][3], key_dim[2][3], key_dim[3][3], key_dim[0][3]};
+void Key_schedule(uint8_t (*key_dim)[4][4]){
+	uint8_t W0[4] = {(*key_dim)[0][0], (*key_dim)[1][0], (*key_dim)[2][0], (*key_dim)[3][0]};
+	uint8_t W1[4] = {(*key_dim)[0][1], (*key_dim)[1][1], (*key_dim)[2][1], (*key_dim)[3][1]};
+	uint8_t W2[4] = {(*key_dim)[0][2], (*key_dim)[1][2], (*key_dim)[2][2], (*key_dim)[3][2]};
+	uint8_t W3[4] = {(*key_dim)[0][3], (*key_dim)[1][3], (*key_dim)[2][3], (*key_dim)[3][3]};
+	uint8_t W4[4] = {(*key_dim)[1][3], (*key_dim)[2][3], (*key_dim)[3][3], (*key_dim)[0][3]};
 	uint8_t W5[4];
 	uint8_t W6[4];
 	uint8_t W7[4];
 	for (int i=0; i<4; i++){
-		W4[i] =  sbox[(int)plaintext_dim[i]];
+		W4[i] =  sbox[(int)W4[i]];
 	}
-	for (int i=0; i<4; i++){
+	for (i=0; i<4; i++){
 		W4[i] = W4[i]^W0^Rcon[round][i];
 	}
-	for (int i=0; i<4; i++){
+	for (i=0; i<4; i++){
 		W5[i] = W4[i]^W1[i];
 		W6[i] = W5[i]^W2[i];
 		W7[i] = W6[i]^W3[i];
 	}
-	for (int i=0; i<4; i++){
-		for (int j=0 ; j<4; j++){
-			key_dim[i][j] = ;
-		}
+	for (i=0; i<4; i++){
+	/*uint8_t* key_dim[i] = {W4, W5, W6, W7}; /* array of pointer, ne fct° pas car on chg le type  */
+		switch(i){
+			case 0: 
+				for (int j=0 ; j<4; j++){	
+					uint8_t (*key_dim)[i][j] = W4[j]
+				}
+				break;
+			case 1: 
+				for (int j=0 ; j<4; j++){	
+					uint8_t (*key_dim)[i][j] = W5[j]
+				}
+				break;
+			case 2:
+				for (int j=0 ; j<4; j++){	
+					uint8_t (*key_dim)[i][j] = W6[j]
+				}
+				break;
+			case 3:
+				for (int j=0 ; j<4; j++){	
+					uint8_t (*key_dim)[i][j] = W7[j]
+				}
+				break;
+		}	
 	}
-	return;
 }
 
-
-void AddRoundKey(uint8_t* plaintext_dim, uint8_t* key_dim){
+void AddRoundKey(uint8_t (*plaintext_dim)[4][4], uint8_t  (*key_dim)[4][4]){
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			plaintext_dim[i][j] = plaintext_dim[i][j] ^key_dim[i][j];
+			(*plaintext_dim)[i][j] = (*plaintext_dim)[i][j]^(*key_dim)[i][j];
 		}
 	}
 }
 
-void SubBytes(uint8_t* plaintext_dim){
+void SubBytes(uint8_t (*plaintext_dim)[4][4]){
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			plaintext_dim[i][j] = sbox[(int)plaintext_dim[i][j]];
+			(*plaintext_dim)[i][j] = sbox[(int)(*plaintext_dim)[i][j]];
 		}
 	}
 }
 
-void ShiftRows(uint8_t* plaintext_dim){ /* a tester*/
+void ShiftRows(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 	uint8_t pending_dim[4][4];
 	for (int i=0; i<4; i++){
 		int a =0;
 		for (int j=0 ; j<4; j++){
 			if (j+i<4){
-				pending_dim[i][j] = plaintext_dim[i][(j+i)]
+				pending_dim[i][j] = (*plaintext_dim)[i][(j+i)]
 			}
 			else{
-				pending_dim[i][j] = plaintext_dim[i][a];
+				pending_dim[i][j] = (*plaintext_dim)[i][a];
 				a++;
 			}		
 		}
 	}
 	for (i=0; i<4; i++){
 		for (j=0 ; j<4; j++){
-			plaintext_dim[i][j] = pending_dim[i][j];
+			(*plaintext_dim)[i][j] = pending_dim[i][j];
 		}
 	}
 }
 
-void MixColoumns(){
+void MixColoumns(uint8_t (*plaintext_dim)[4][4]){
 	uint8_t Rijndael_matrix[16]= {2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2};
 	uint8_t pending[64];
 	int a=0;
@@ -105,11 +123,11 @@ void MixColoumns(){
 		for (int i=0; i<4; i++){
 			for (int j=0 ; j<4; j++){
 				if ( Rijndael_matrix[b] == 1){
-						pending[a] = plaintext_dim[j][k];}
+						pending[a] = (*plaintext_dim)[j][k];}
 					
 				if ( Rijndael_matrix[b] == 2){
-						unsigned result = ((plaintext_dim[j][k])<<1);
-						if ((plaintext_dim[j][k]>>4)>=8){
+						unsigned result = (((*plaintext_dim)[j][k])<<1);
+						if (((*plaintext_dim)[j][k]>>4)>=8){
 						/*attention si le byte a un 1 au debut, il faut shifter et XORer avec 0x1b*/
 							pending[a] = result^(0x1B);
 						}
@@ -118,13 +136,13 @@ void MixColoumns(){
 						}
 				}		
 				if ( Rijndael_matrix[b] == 3){
-						unsigned result = ((plaintext_dim[j][k])<<1);
-						if ((plaintext_dim[j][k]>>4)>=0x8){
+						unsigned result = (((*plaintext_dim)[j][k])<<1);
+						if (((*plaintext_dim)[j][k]>>4)>=0x8){
 						/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XORer avec 0x1b*/
-							pending[a] = (result)^(0x1B)^(plaintext_dim[j][k]);
+							pending[a] = (result)^(0x1B)^((*plaintext_dim)[j][k]);
 						}
 						else{
-							pending[a] = (result)^(plaintext_dim[j][k]);
+							pending[a] = (result)^((*plaintext_dim)[j][k]);
 						}
 				
 				}
@@ -135,7 +153,7 @@ void MixColoumns(){
 	}
 	for (j=0; j<4; j++){
 		for (i=0; i<4; i++){/*attention*/
-			plaintext_dim[i][j] = pending[(i*4)+(j*16)]^pending[((i*4)+(j*16)+1)]^pending[((i*4)+(j*16)+2)]^pending[((i*4)+(j*16)+3)];
+			(*plaintext_dim)[i][j] = pending[(i*4)+(j*16)]^pending[((i*4)+(j*16)+1)]^pending[((i*4)+(j*16)+2)]^pending[((i*4)+(j*16)+3)];
 		}
 	}
 }
@@ -165,23 +183,23 @@ void main(){
 	int a = 0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			kplaintext_dim[i][j] = plaintext_line[a];
+			plaintext_dim[i][j] = plaintext_line[a];
 			a++;
 			}
 	}
 
 
-	AddRoundKey(plaintext_dim, key_dim);
+	AddRoundKey(&plaintext_dim, &key_dim);
 	for ( int i = 0; i<9 ; i++){
-		SubBytes(plaintext_dim);
-		ShiftRows(plaintext_dim);
-		MixColoumns(plaintext_dim);
-		Key_schedule(key_dim);
-		AddRoundKey(plaintext_dim, key_dim);}
-	SubBytes(plaintext_dim);
-	ShiftRows(plaintext_dim);	
-	Key_schedule(key_dim);
-	AddRoundKey(plaintext_dim, key_dim);
+		SubBytes(&plaintext_dim);
+		ShiftRows(&plaintext_dim);
+		MixColoumns(&plaintext_dim);
+		Key_schedule(&key_dim);
+		AddRoundKey(&plaintext_dim, &key_dim);}
+	SubBytes(&plaintext_dim);
+	ShiftRows(&plaintext_dim);	
+	Key_schedule(&key_dim);
+	AddRoundKey(&plaintext_dim, &key_dim);
 	
 }
 
