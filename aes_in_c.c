@@ -46,6 +46,7 @@ void Key_schedule(uint8_t (*key_dim)[4][4]){
 	for (int i=0; i<4; i++){
 		W4[i] = W4[i]^W0[i]^Rcon[round][i];
 	}
+	round++;
 	for (int i=0; i<4; i++){
 		W5[i] = W4[i]^W1[i];
 		W6[i] = W5[i]^W2[i];
@@ -160,15 +161,15 @@ void MixColoumns(uint8_t (*plaintext_dim)[4][4]){
 }
 
 void main(){
-	uint8_t key_line[16] = {0x2b, 0x7e, 0x15, 0x16,
-				0x2c, 0x8a, 0xed, 0x2a,
-				0x6a, 0xbf, 0x71, 0x58,
-				0x80, 0x9c, 0xf4, 0xf3};
+	uint8_t key_line[16] = {0x54, 0x68, 0x61, 0x74,
+				0x73, 0x20, 0x6d, 0x79,
+				0x20, 0x4b, 0x75, 0x6e,
+				0x67, 0x20, 0x46, 0x75};
 				
-	int8_t plaintext_line[16] = {0x6b, 0xc1, 0xbe, 0xe2,
-				     0x2e, 0x40, 0x9f, 0x96,
-				     0xe9, 0x3d, 0x7e, 0x11,
-				     0x73, 0x93, 0x17, 0x2a};
+	int8_t plaintext_line[16] = {0x54, 0x77, 0x6f, 0x20,
+				     0x4f, 0x6e, 0x65, 0x20,
+				     0x4e, 0x69, 0x6e, 0x65,
+				     0x20, 0x54, 0x77, 0x6f};
 	/* ceci est le format espéré en sortie de fichier quand on appelera AES*/			
 
 	uint8_t key_dim[4][4]; 
@@ -190,12 +191,12 @@ void main(){
 	}
 
 
-	AddRoundKey(&plaintext_dim, &key_dim);
-	for ( int i = 0; i<9 ; i++){
-		SubBytes(&plaintext_dim);
-		ShiftRows(&plaintext_dim);
-		MixColoumns(&plaintext_dim);
-		Key_schedule(&key_dim);
+	AddRoundKey(&plaintext_dim, &key_dim); /*ok*/
+	for ( int i = 0; i<1 ; i++){
+		SubBytes(&plaintext_dim); /*ok*/
+		ShiftRows(&plaintext_dim); /*ok*/
+		MixColoumns(&plaintext_dim); /*ok*/
+		Key_schedule(&key_dim);  /*ok*/
 		AddRoundKey(&plaintext_dim, &key_dim);}
 	SubBytes(&plaintext_dim);
 	ShiftRows(&plaintext_dim);	
