@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
 static int  round = 0;
 static const uint8_t sbox[256] = {
@@ -42,35 +43,35 @@ void Key_schedule(uint8_t (*key_dim)[4][4]){
 	for (int i=0; i<4; i++){
 		W4[i] =  sbox[(int)W4[i]];
 	}
-	for (i=0; i<4; i++){
-		W4[i] = W4[i]^W0^Rcon[round][i];
+	for (int i=0; i<4; i++){
+		W4[i] = W4[i]^W0[i]^Rcon[round][i];
 	}
-	for (i=0; i<4; i++){
+	for (int i=0; i<4; i++){
 		W5[i] = W4[i]^W1[i];
 		W6[i] = W5[i]^W2[i];
 		W7[i] = W6[i]^W3[i];
 	}
-	for (i=0; i<4; i++){
+	for (int i=0; i<4; i++){
 	/*uint8_t* key_dim[i] = {W4, W5, W6, W7}; /* array of pointer, ne fct° pas car on chg le type  */
 		switch(i){
 			case 0: 
 				for (int j=0 ; j<4; j++){	
-					uint8_t (*key_dim)[i][j] = W4[j]
+					(*key_dim)[i][j] = W4[j];
 				}
 				break;
 			case 1: 
 				for (int j=0 ; j<4; j++){	
-					uint8_t (*key_dim)[i][j] = W5[j]
+					(*key_dim)[i][j] = W5[j];
 				}
 				break;
 			case 2:
 				for (int j=0 ; j<4; j++){	
-					uint8_t (*key_dim)[i][j] = W6[j]
+					(*key_dim)[i][j] = W6[j];
 				}
 				break;
 			case 3:
 				for (int j=0 ; j<4; j++){	
-					uint8_t (*key_dim)[i][j] = W7[j]
+					(*key_dim)[i][j] = W7[j];
 				}
 				break;
 		}	
@@ -99,7 +100,7 @@ void ShiftRows(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 		int a =0;
 		for (int j=0 ; j<4; j++){
 			if (j+i<4){
-				pending_dim[i][j] = (*plaintext_dim)[i][(j+i)]
+				pending_dim[i][j] = (*plaintext_dim)[i][(j+i)];
 			}
 			else{
 				pending_dim[i][j] = (*plaintext_dim)[i][a];
@@ -107,8 +108,8 @@ void ShiftRows(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 			}		
 		}
 	}
-	for (i=0; i<4; i++){
-		for (j=0 ; j<4; j++){
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
 			(*plaintext_dim)[i][j] = pending_dim[i][j];
 		}
 	}
@@ -151,8 +152,8 @@ void MixColoumns(uint8_t (*plaintext_dim)[4][4]){
 			}
 		}
 	}
-	for (j=0; j<4; j++){
-		for (i=0; i<4; i++){/*attention*/
+	for (int j=0; j<4; j++){
+		for (int i=0; i<4; i++){/*attention*/
 			(*plaintext_dim)[i][j] = pending[(i*4)+(j*16)]^pending[((i*4)+(j*16)+1)]^pending[((i*4)+(j*16)+2)]^pending[((i*4)+(j*16)+3)];
 		}
 	}
@@ -180,7 +181,7 @@ void main(){
 	}
 
 	uint8_t plaintext_dim[4][4]; 
-	int a = 0;
+	a = 0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
 			plaintext_dim[i][j] = plaintext_line[a];
