@@ -2,6 +2,7 @@
 /*Hugo MAGERAT*/
 /*FIPS 197*/
 /* angelfire.com/biz7/atleast/mix_columns.pdf*//*fut très TRES utile pour comprendre*/
+/*https://crypto.stackexchange.com/questions/2569/how-does-one-implement-the-inverse-of-aes-mixcolumns*/
 
 #include <stdio.h>
 #include <dirent.h>
@@ -116,41 +117,84 @@ void inv_ShiftRows(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 		}
 	}
 }
-void inv_MixColoumns(uint8_t (*plaintext_dim)[4][4]){
+void inv_MixColoumns(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 	uint8_t Rijndael_matrix[16]= {0x0e,0x0b,0x0d,0x09,0x09,0x0e,0x0b,0x0d,0x0d,0x09,0x0e,0x0b,0x0b,0x0d,0x09,0x0e};
 	uint8_t pending[64];
 	int a=0;
+	unsigned result1;
+	unsigned result2;
+	unsigned result3;
+	unsigned result4;
+	unsigned result5;
+	unsigned result6;
 	for (int k=0; k<4; k++){
 		int b=0;
 		for (int i=0; i<4; i++){
 			for (int j=0 ; j<4; j++){
-				
-			
-			
-				/*if ( Rijndael_matrix[b] == 1){
-						pending[a] = (*plaintext_dim)[j][k];}
-					
-				if ( Rijndael_matrix[b] == 2){
-						unsigned result = (((*plaintext_dim)[j][k])<<1);
-						if (((*plaintext_dim)[j][k]>>4)>=8){
-						/*attention si le byte a un 1 au debut, il faut shifter et XORer avec 0x1b
-							pending[a] = result^(0x1B);
-						}
-						else{
-							pending[a] = result;
-						}
-				}		
-				if ( Rijndael_matrix[b] == 3){
-						unsigned result = (((*plaintext_dim)[j][k])<<1);
+				if ( Rijndael_matrix[b] == 0x09){
+						result1 = (((*plaintext_dim)[j][k])<<1);
 						if (((*plaintext_dim)[j][k]>>4)>=0x8){
-						/*attention si le byte a un 1 au debut(position2⁷, il faut shifter et XORer avec 0x1b
-							pending[a] = (result)^(0x1B)^((*plaintext_dim)[j][k]);
+							result1 = result1^(0x1B);
 						}
-						else{
-							pending[a] = (result)^((*plaintext_dim)[j][k]);
+						result2 = ((result1)<<1);
+						if ((result1>>4)>=0x8){
+							result2 = result2^(0x1B);
 						}
-				
-				}*/
+						result3 = ((result2)<<1);
+						if ((result2>>4)>=0x8){
+							result3 = result3^(0x1B);
+						}
+						pending[a] = result3^(*plaintext_dim)[j][k]);				
+				}
+				if ( Rijndael_matrix[b] == 0x0b){
+						result1 = (((*plaintext_dim)[j][k])<<1);
+						if (((*plaintext_dim)[j][k]>>4)>=0x8){
+							result1 = result1^(0x1B);
+						}
+						result2 = ((result1)<<1);
+						if ((result1>>4)>=0x8){
+							result2 = result2^(0x1B);
+						}
+						result2 = result2^(*plaintext_dim)[j][k]);
+						result3 = ((result2)<<1);
+						if ((result2>>4)>=0x8){
+							result3 = result3^(0x1B);
+						}				
+						pending[a] = result3^(*plaintext_dim)[j][k]);
+				}
+				if ( Rijndael_matrix[b] == 0x0d){
+						result1 = (((*plaintext_dim)[j][k])<<1);
+						if (((*plaintext_dim)[j][k]>>4)>=0x8){
+							result1 = result1^(0x1B);
+						}
+						result1 = result1^(*plaintext_dim)[j][k]);
+						result2 = ((result1)<<1);
+						if ((result1>>4)>=0x8){
+							result2 = result2^(0x1B);
+						}
+						result3 = ((result2)<<1);
+						if ((result2>>4)>=0x8){
+							result3 = result3^(0x1B);
+						}
+						pending[a] = result3^(*plaintext_dim)[j][k]);
+				}
+				if ( Rijndael_matrix[b] == 0x0e){
+						result1 = (((*plaintext_dim)[j][k])<<1);
+						if (((*plaintext_dim)[j][k]>>4)>=0x8){
+							result1 = result1^(0x1B);
+						}
+						result1 = result1^(*plaintext_dim)[j][k]);
+						result2 = ((result1)<<1);
+						if ((result1>>4)>=0x8){
+							result2 = result2^(0x1B);
+						}
+						result2 = result2^(*plaintext_dim)[j][k]);
+						result3 = ((result2)<<1);
+						if ((result2>>4)>=0x8){
+							result3 = result3^(0x1B);
+						}
+						pending[a] = result3;
+				}
 				a++;
 				b++;
 			}
