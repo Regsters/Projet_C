@@ -10,7 +10,8 @@
 #include <sys/stat.h>
 #include <stdint.h>
 
-static int  round = 0;
+
+static int step = 0;
 static const uint8_t rsbox[256] = {
 	// 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
 	0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 
@@ -32,60 +33,64 @@ static const uint8_t rsbox[256] = {
 
 static const uint8_t Rcon[10][4] = {{0x01,0x00, 0x00, 0x00},{0x02,0x00, 0x00, 0x00},{0x04,0x00, 0x00, 0x00},{0x08,0x00, 0x00, 0x00},{0x10,0x00, 0x00, 0x00},{0x20,0x00, 0x00, 0x00},{0x40,0x00, 0x00, 0x00},{0x80,0x00, 0x00, 0x00},{0x1b,0x00, 0x00, 0x00},{0x36,0x00, 0x00, 0x00}};
   
-void Key_schedule(uint8_t (*key_dim)[4][4]){
-	uint8_t W0[4] = {(*key_dim)[0][0], (*key_dim)[1][0], (*key_dim)[2][0], (*key_dim)[3][0]};
-	uint8_t W1[4] = {(*key_dim)[0][1], (*key_dim)[1][1], (*key_dim)[2][1], (*key_dim)[3][1]};
-	uint8_t W2[4] = {(*key_dim)[0][2], (*key_dim)[1][2], (*key_dim)[2][2], (*key_dim)[3][2]};
-	uint8_t W3[4] = {(*key_dim)[0][3], (*key_dim)[1][3], (*key_dim)[2][3], (*key_dim)[3][3]};
-	uint8_t W4[4] = {(*key_dim)[1][3], (*key_dim)[2][3], (*key_dim)[3][3], (*key_dim)[0][3]};
-	uint8_t W5[4];
-	uint8_t W6[4];
-	uint8_t W7[4];
-	for (int i=0; i<4; i++){
-		W4[i] =  sbox[(int)W4[i]];
-	}
-	for (int i=0; i<4; i++){
-		W4[i] = W4[i]^W0[i]^Rcon[round][i];
-	}
-	round++;
-	for (int i=0; i<4; i++){
-		W5[i] = W4[i]^W1[i];
-		W6[i] = W5[i]^W2[i];
-		W7[i] = W6[i]^W3[i];
-	}
-	for (int i=0; i<4; i++){
-	/*uint8_t* key_dim[i] = {W4, W5, W6, W7}; /* array of pointer, ne fct° pas car on chg le type  */
-		switch(i){
-			case 0: 
-				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W4[j];
-				}
-				break;
-			case 1: 
-				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W5[j];
-				}
-				break;
-			case 2:
-				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W6[j];
-				}
-				break;
-			case 3:
-				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W7[j];
-				}
-				break;
-		}	
+void Key_schedule(uint8_t (*key_dim)[11][4][4]){
+	int round = 1;
+	for (int i=0; i<10; i++){
+		uint8_t W0[4] = {(*key_dim)[round][0][0], (*key_dim)[round][1][0], (*key_dim)[round][2][0], (*key_dim)[round][3][0]};
+		uint8_t W1[4] = {(*key_dim)[round][0][1], (*key_dim)[round][1][1], (*key_dim)[round][2][1], (*key_dim)[round][3][1]};
+		uint8_t W2[4] = {(*key_dim)[round][0][2], (*key_dim)[round][1][2], (*key_dim)[round][2][2], (*key_dim)[round][3][2]};
+		uint8_t W3[4] = {(*key_dim)[round][0][3], (*key_dim)[round][1][3], (*key_dim)[round][2][3], (*key_dim)[round][3][3]};
+		uint8_t W4[4] = {(*key_dim)[round][1][3], (*key_dim)[round][2][3], (*key_dim)[round][3][3], (*key_dim)[round][0][3]};
+		uint8_t W5[4];
+		uint8_t W6[4];
+		uint8_t W7[4];
+		for (int i=0; i<4; i++){
+			W4[i] =  sbox[(int)W4[i]];
+		}
+		for (int i=0; i<4; i++){
+			W4[i] = W4[i]^W0[i]^Rcon[round][i];
+		}
+		for (int i=0; i<4; i++){
+			W5[i] = W4[i]^W1[i];
+			W6[i] = W5[i]^W2[i];
+			W7[i] = W6[i]^W3[i];
+		}
+		for (int i=0; i<4; i++){
+		/*uint8_t* key_dim[i] = {W4, W5, W6, W7}; /* array of pointer, ne fct° pas car on chg le type  */
+			switch(i){
+				case 0: 
+					for (int j=0 ; j<4; j++){	
+						(*key_dim)[round][i][j] = W4[j];
+					}
+					break;
+				case 1: 
+					for (int j=0 ; j<4; j++){	
+						(*key_dim)[round][i][j] = W5[j];
+					}
+					break;
+				case 2:
+					for (int j=0 ; j<4; j++){	
+						(*key_dim)[round][i][j] = W6[j];
+					}
+					break;
+				case 3:
+					for (int j=0 ; j<4; j++){	
+						(*key_dim)[round][i][j] = W7[j];
+					}
+					break;
+			}		
+		}
+		step++;
 	}
 }
 
 void AddRoundKey(uint8_t (*plaintext_dim)[4][4], uint8_t  (*key_dim)[4][4]){
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			(*plaintext_dim)[i][j] = (*plaintext_dim)[i][j]^(*key_dim)[i][j];
+			(*plaintext_dim)[i][j] = (*plaintext_dim)[i][j]^(*key_dim)[step][i][j];
 		}
 	}
+	step++;
 }
 
 void inv_SubBytes(uint8_t (*plaintext_dim)[4][4]){
@@ -218,11 +223,11 @@ void main(){
 				     0x20, 0x54, 0x77, 0x6f};
 	/* ceci est le format espéré en sortie de fichier quand on appelera AES*/			
 
-	uint8_t key_dim[4][4]; 
+	uint8_t key_dim[11][4][4]; 
 	int a = 0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			key_dim[i][j] = key_line[a];
+			key_dim[0][i][j] = key_line[a];
 			a++;
 			}
 	}
@@ -235,17 +240,16 @@ void main(){
 			a++;
 			}
 	}
-
-	AddRoundKey(&plaintext_dim, &key_dim); /*ok*/
+	
+	key_schedule(&key_dim)
+	AddRoundKey(&plaintext_dim, &key_dim);
 	for ( int i = 0; i<9 ; i++){
-		inv_ShiftRows(&plaintext_dim); /*ok*/
-		inv_SubBytes(&plaintext_dim); /*ok*/
-		Key_schedule(&key_dim);  /*ok*/
+		inv_ShiftRows(&plaintext_dim); 
+		inv_SubBytes(&plaintext_dim);
 		AddRoundKey(&plaintext_dim, &key_dim);}
 		inv_MixColoumns(&plaintext_dim); 
-	SubBytes(&plaintext_dim);
-	ShiftRows(&plaintext_dim);	
-	Key_schedule(&key_dim);
+	inv_ShiftRows(&plaintext_dim); 
+	inv_SubBytes(&plaintext_dim);	
 	AddRoundKey(&plaintext_dim, &key_dim);
 	
 }
