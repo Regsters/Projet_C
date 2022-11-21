@@ -80,7 +80,7 @@ void Key_schedule(uint8_t (*key_dim)[11][4][4]){
 					break;
 			}		
 		}
-		step++;
+		round++;
 	}
 }
 
