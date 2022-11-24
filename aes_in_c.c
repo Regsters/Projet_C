@@ -57,22 +57,22 @@ void Key_schedule(uint8_t (*key_dim)[4][4]){
 		switch(i){
 			case 0: 
 				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W4[j];
+					(*key_dim)[j][0] = W4[j];
 				}
 				break;
 			case 1: 
 				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W5[j];
+					(*key_dim)[j][1] = W5[j];
 				}
 				break;
 			case 2:
 				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W6[j];
+					(*key_dim)[j][2] = W6[j];
 				}
 				break;
 			case 3:
 				for (int j=0 ; j<4; j++){	
-					(*key_dim)[i][j] = W7[j];
+					(*key_dim)[j][3] = W7[j];
 				}
 				break;
 		}	
@@ -95,7 +95,7 @@ void SubBytes(uint8_t (*plaintext_dim)[4][4]){
 	}
 }
 
-void ShiftRows(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
+void ShiftRows(uint8_t (*plaintext_dim)[4][4]){ 
 	uint8_t pending_dim[4][4];
 	for (int i=0; i<4; i++){
 		int a =0;
@@ -129,7 +129,7 @@ void MixColoumns(uint8_t (*plaintext_dim)[4][4]){
 					
 				if ( Rijndael_matrix[b] == 2){
 						unsigned result = (((*plaintext_dim)[j][k])<<1);
-						if (((*plaintext_dim)[j][k]>>4)>=8){
+						if (((*plaintext_dim)[j][k]>>4)>=0x8){
 						/*attention si le byte a un 1 au debut, il faut shifter et XORer avec 0x1b*/
 							pending[a] = result^(0x1B);
 						}
@@ -166,7 +166,7 @@ void main(){
 				0x20, 0x4b, 0x75, 0x6e,
 				0x67, 0x20, 0x46, 0x75};
 				
-	int8_t plaintext_line[16] = {0x54, 0x77, 0x6f, 0x20,
+	uint8_t plaintext_line[16] = {0x54, 0x77, 0x6f, 0x20,
 				     0x4f, 0x6e, 0x65, 0x20,
 				     0x4e, 0x69, 0x6e, 0x65,
 				     0x20, 0x54, 0x77, 0x6f};
@@ -176,7 +176,7 @@ void main(){
 	int a = 0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			key_dim[i][j] = key_line[a];
+			key_dim[j][i] = key_line[a];
 			a++;
 			}
 	}
@@ -185,7 +185,7 @@ void main(){
 	a = 0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			plaintext_dim[i][j] = plaintext_line[a];
+			plaintext_dim[j][i] = plaintext_line[a];
 			a++;
 			}
 	}
@@ -197,11 +197,20 @@ void main(){
 		ShiftRows(&plaintext_dim); /*ok*/
 		MixColoumns(&plaintext_dim); /*ok*/
 		Key_schedule(&key_dim);  /*ok*/
-		AddRoundKey(&plaintext_dim, &key_dim);}
+		AddRoundKey(&plaintext_dim, &key_dim);
+	}
 	SubBytes(&plaintext_dim);
 	ShiftRows(&plaintext_dim);	
 	Key_schedule(&key_dim);
 	AddRoundKey(&plaintext_dim, &key_dim);
+	for (int i=0; i<4; i++){
+		for (int j=0 ; j<4; j++){
+			printf("%hhx ", plaintext_dim[j][i]);
+			}
+	}
+	printf("\n");
+	/*29 c3 50 5f 57 14 20 f6 40 22 99 b3 1a 2 d7 3a */
+
 	
 }
 
