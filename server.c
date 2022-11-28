@@ -1,57 +1,35 @@
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
-#include <signal.h>
+#include <unistd.h>
 
-void fin (int i);
-void appli(int no_client_socket);
-char buffer[512];
-int my_socket;
 
-void main(void){
+int main(){
+    char server_message [256] = "You have research the server";
+    //initialisation du socket
+    int server_socket;
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    //initialisation de l'addresse du serveur
+    struct sockaddr_in server_address;
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(9002);
+    server_address.sin_addr.s_addr = INADDR_ANY;
+
+    bind(server_socket, (struct sockaddr *) &server_address, sizeof(server_address));
+    //verification de la connection
+    listen(server_socket, 1);
+
     int client_socket;
-    struct sockaddr_in my_address, client_address;
-    int my_address_len, lg;
+    //acceptation de la connection
+    client_socket = accept(server_socket, NULL, NULL);
+    //envoie du message
+    send(client_socket, server_message, sizeof(server_message), 0);
+    //fermeture du socket
 
-    bzero(&my_address,sizeof(my_address));
-    my_address.sin_port = htons(30000);
-    my_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    close(server_socket);
 
-    /*creation of the socket*/
-    if ((my_socket = socket(AF_INET, SOCK_STREAM, 0))== -1){
-        printf("test\n");
-        exit(0);
-    }
-    signal(SIGINT,fin);
-    bind(my_socket,(struct sockaddr *) &my_address,sizeof(my_address));
-    listen(my_socket,5);
-
-    my_address_len = sizeof(client_address);
-
-    while(1){
-        client_socket = accept(my_socket,(struct sockaddr *)&client_address, &my_address_len);
-        if (fork()==0){
-            close(my_socket);
-            
-            lg = read(client_socket,buffer,512);
-            printf("The server receved : %s\n", buffer);
-            sprintf(buffer,"%s of the server", buffer);
-            write(client_socket, buffer,512);
-            shutdown(client_socket,2);
-            close(client_socket);
-            exit(0);
-        }
-    }
-    shutdown(my_socket,2);
-    close(my_socket);
-}
-
-void appli(int no_client_socket){
-    printf("here is the server");
-
-}
-
-void end(int i){
-    shutdown(my_socket, 2);
-    close(my_socket);
+    return 0;
 }
