@@ -384,7 +384,7 @@ void aes_decrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	}
 	inv_ShiftRows(&plaintext_dim); 
 	inv_SubBytes(&plaintext_dim);	
-	AddRoundKey(&plaintext_dim, &key_dim);	
+	inv_AddRoundKey(&plaintext_dim, &key_dim);	
 	for (int i=0; i<4; i++){
 			for (int j=0 ; j<4; j++){
 				printf("%hhx\n", plaintext_dim[j][i]);
