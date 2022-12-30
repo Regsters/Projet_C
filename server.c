@@ -1,35 +1,56 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#define BUFFER_SIZE 1024
 
+void handle_error(){
+    printf("Error\n");
+    exit(0);
+}
 
-int main(){
-    char server_message [256] = "You have research the server";
-    //initialisation du socket
-    int server_socket;
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+int main(void){
+    int sockid;
+    int server_port = 8888;
+    char *server_ip = "127.0.0.1";
 
-    //initialisation de l'addresse du serveur
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(9002);
-    server_address.sin_addr.s_addr = INADDR_ANY;
+    sockid = socket(AF_INET, SOCK_STREAM, 0);
 
-    bind(server_socket, (struct sockaddr *) &server_address, sizeof(server_address));
-    //verification de la connection
-    listen(server_socket, 1);
+    struct sockaddr_in server_addr, client_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
-    int client_socket;
-    //acceptation de la connection
-    client_socket = accept(server_socket, NULL, NULL);
-    //envoie du message
-    send(client_socket, server_message, sizeof(server_message), 0);
-    //fermeture du socket
+    char *buffer[BUFFER_SIZE];
+    int n, client_socket;
+    int bind_result = bind(sockid, (const struct sockaddr *)&server_addr, sizeof(server_addr));
 
-    close(server_socket);
+    if(bind_result<0){
+        printf("Error during binding");
+    }
+    else {
+        printf("server listening on%s:%d\n",server_ip, server_port);
+        n = listen(sockid, 1);
+        if (n < 0) {
+            printf("Error during listen()\n");
+            handle_error();
+        }
+        int len = sizeof(client_addr);
+        client_socket = accept(sockid, (struct sockaddr *) &client_addr, &len);
 
-    return 0;
+        if (client_socket < 0) {
+            printf("Error during accept");
+            handle_error();
+        }
+        printf("Accept connection from %d %s:%d\n",
+               client_socket,
+               inet_ntoa(client_addr.sin_addr),
+               client_addr.sin_port);
+        n = recv(client_socket, (char *) buffer, BUFFER_SIZE, MSG_WAITALL);
+
+        printf("Message of size %d received: %s\n", n, (char *)buffer);
+
+    }
+    close(sockid);
 }
