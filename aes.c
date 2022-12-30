@@ -8,9 +8,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <math.h>
+
 
 static int step = 0;
-static int  round = 0;
 
 static const uint8_t rsbox[256] = {
 0x52,0x09,0x6a,0xd5,0x30,0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 
@@ -319,7 +321,7 @@ void inv_MixColoumns(uint8_t (*plaintext_dim)[4][4]){ /* a tester*/
 	}
 }
 
-void aes_encrypt(uint8_t* plaintext_line, uint8_t* key_line){
+void aes_encrypt(uint8_t *plaintext_line, uint8_t *key_line){
 	uint8_t key_dim[11][4][4]; 
 	int a = 0;
 	for (int i=0; i<4; i++){
@@ -334,9 +336,11 @@ void aes_encrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
 			plaintext_dim[j][i] = plaintext_line[a];
+			printf("%hhx", plaintext_line[a]);
 			a++;
 			}
 	}
+	printf("\n");
 	Key_schedule(&key_dim);  /*ok*/
 	AddRoundKey(&plaintext_dim, &key_dim); /*ok*/
 	for ( int i = 0; i<9 ; i++){
@@ -348,15 +352,18 @@ void aes_encrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	SubBytes(&plaintext_dim);
 	ShiftRows(&plaintext_dim);	
 	AddRoundKey(&plaintext_dim, &key_dim);
+	a =0;
 	for (int i=0; i<4; i++){
 		for (int j=0 ; j<4; j++){
-			printf("%hhx ", plaintext_dim[j][i]);
+			plaintext_line[a]= plaintext_dim[j][i];
+			printf("%hhx", plaintext_line[a]);
+			a++;
 			}
 	}
 
 }
 
-void aes_decrypt(uint8_t* plaintext_line, uint8_t* key_line){
+void aes_decrypt(uint8_t *plaintext_line, uint8_t *key_line){
 	uint8_t key_dim[11][4][4]; 
 	int a = 0;
 	for (int i=0; i<4; i++){
@@ -384,7 +391,7 @@ void aes_decrypt(uint8_t* plaintext_line, uint8_t* key_line){
 	}
 	inv_ShiftRows(&plaintext_dim); 
 	inv_SubBytes(&plaintext_dim);	
-	inv_AddRoundKey(&plaintext_dim, &key_dim);	
+	AddRoundKey(&plaintext_dim, &key_dim);	
 	for (int i=0; i<4; i++){
 			for (int j=0 ; j<4; j++){
 				printf("%hhx\n", plaintext_dim[j][i]);
@@ -394,21 +401,34 @@ void aes_decrypt(uint8_t* plaintext_line, uint8_t* key_line){
 }
 
 
-
-void main(){
-	uint8_t key_line[16] = {0x54, 0x68, 0x61, 0x74,
+int main(int argc, char* argv[]) {
+	uint8_t key_line[16] = {84, 0x68, 0x61, 0x74,
 				0x73, 0x20, 0x6d, 0x79,
 				0x20, 0x4b, 0x75, 0x6e,
 				0x67, 0x20, 0x46, 0x75};
 				
-	uint8_t plaintext_line[16] = {0x54, 0x77, 0x6f, 0x20,
+	/*uint8_t plaintext_line[2][16] = {{0x54, 0x77, 0x6f, 0x20,
 				     0x4f, 0x6e, 0x65, 0x20,
 				     0x4e, 0x69, 0x6e, 0x65,
-				     0x20, 0x54, 0x77, 0x6f};
-	/* ceci est le format espéré en sortie de fichier quand on appelera AES*/			
+				     0x20, 0x54, 0x77, 0x6f},{0x84, 0x68, 0x61, 0x74,
+				0x73, 0x20, 0x6d, 0x79,
+				0x20, 0x4b, 0x75, 0x6e,
+				0x67, 0x20, 0x46, 0x75}};*/ 
+	uint8_t plaintext_line[16];
+	char *token = strtok(argv[1], ",");
+	int i =0;
+	while (token != NULL){
+		plaintext_line[i] = atoi(token);
+		i++;
+		token = strtok(NULL, ",");
+	}
+	/*for (i = 0 ; i<16; i++){
+		printf("%d", plaintext_line[i]);
+		printf("\n");
+	}*/
+	aes_encrypt(plaintext_line, key_line);
+	return 0;
 	
-	aes_encrypt(&plaintext_line, &key_line);
-
 	
 }
 
