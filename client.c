@@ -1,34 +1,66 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <netdb.h>
 
-int main(){
-    int network_socket;
-    //initialisation du socket
-    network_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(9002);
-    server_address.sin_addr.s_addr = INADDR_ANY;
-
-    int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
-    //message d'erreur de connection
-    if (connection_status == -1){
-        printf("There was an error in the connection \n");
+void checkHostName(int hostname){
+    if (hostname == -1){
+        perror("gethostname");
+        exit(1);
     }
+}
 
-    char server_rep[256];
-    //reception du message
-    recv(network_socket, &server_rep, sizeof (server_rep), 0);
+void checkHostEntry(struct hostent * hostentry){
+    if (hostentry == NULL){
+        perror("gethostbyname");
+        exit(1);
+    }
+}
+void checkIPbuffer(char *IPbuffer){
+    if (NULL == IPbuffer){
+        perror("inet_ntoa");
+        exit(1);
+    }
+}
 
-    //affichage du message
-    printf("The server sent the data: %s\n", server_rep);
+int main (void){
+    char hostbuffer[256];
+    char *IPbuffer;
+    struct hostent *host_entry;
+    int hostname;
 
-    //fermeture du socket
-    close(network_socket);
-    return 0;
+    hostname = gethostname(hostbuffer,sizeof(hostbuffer));
+    checkHostName(hostname);
+
+    host_entry = gethostbyname(hostbuffer);
+    checkHostEntry(host_entry);
+
+    IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+    printf("%s", IPbuffer);
+
+
+
+    int sockid;
+    int server_port = 8888;
+    char *server_ip = "192.168.0.143";
+
+    sockid = socket(AF_INET, SOCK_STREAM,0);
+
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
+    server_addr.sin_addr.s_addr = inet_addr(server_ip);
+
+    char *msg = IPbuffer;
+
+    connect(sockid,(struct sockaddr *)&server_addr,sizeof(server_addr));
+
+    send(sockid,(const char *)msg,strlen(msg),0);
+
+    close(sockid);
 }
