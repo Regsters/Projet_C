@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <netdb.h>
-#define BUFFER_SIZE 97
+#define BUFFER_SIZE 160
 
 void handle_error(){
     printf("Error\n");
