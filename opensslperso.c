@@ -67,7 +67,7 @@ int aes_decrypt(FILE *in, FILE *out, const unsigned char *key, const unsigned ch
     			printf("erreur de fwrite après evp update : déchiffrement\n");
     		}
   	}
-  	int rest_len;
+  	int rest_len; 
   	if ((EVP_DecryptFinal_ex(ctx, out_buffer, &rest_len)) != 1){
   		printf("erreur de evp final :déchiffrement\n");
   	}
@@ -111,7 +111,7 @@ int extension_file(const char* name){
 
 }
 
-int encrypt(const char* path, const unsigned char *key, const unsigned char *iv){
+int encrypt(char* path, const unsigned char *key, const unsigned char *iv){
 	// Ouvrir les fichiers en lecture et écriture
     	FILE *in_file = fopen(path, "rb");
     	FILE *out_file = fopen("./output.txt", "wb");
@@ -119,7 +119,7 @@ int encrypt(const char* path, const unsigned char *key, const unsigned char *iv)
     	// Vérifier si les fichiers ont bien été ouverts
     	if (in_file == NULL || out_file == NULL) {
         	printf("erreur d'ouverture de fichier pour le chiffrement\n");
-        	exit(1);
+        	return 1;
     	}
     	aes_encrypt(in_file, out_file, key, iv);
     	fclose(in_file);
@@ -133,12 +133,12 @@ int encrypt(const char* path, const unsigned char *key, const unsigned char *iv)
 
 }
 
-int decrypt(const char* path, const unsigned char *key, const unsigned char *iv){
+int decrypt(char* path, const unsigned char *key, const unsigned char *iv){
 	FILE *in_file = fopen(path, "rb");
     	FILE *out_file = fopen("output.txt", "wb");
     	if (in_file == NULL || out_file == NULL) {
         	printf("erreur d'ouverture de fichier pour le déchiffrement\n");
-        	exit(1);
+        	return 1;
     	}
     	aes_decrypt(in_file, out_file, key, iv);
     	fclose(in_file);
@@ -151,7 +151,7 @@ int decrypt(const char* path, const unsigned char *key, const unsigned char *iv)
 
 }
 
-int ls(const char* name, const unsigned char *key, const unsigned char *iv, char *ending){
+int ls(char* name, const unsigned char *key, const unsigned char *iv, char *ending){
 	DIR* dir = opendir(name);
 	printf("Reading files in: %s\n", name);
 	if (dir == NULL){ 
@@ -179,13 +179,13 @@ int ls(const char* name, const unsigned char *key, const unsigned char *iv, char
 					strcat(file_path, name);
 					strcat(file_path, "/");
 					strcat(file_path, entity->d_name);
-					if(ending = "1"){
+					if(strcmp(ending, "1") == 0){
 						encrypt(file_path, key, iv);
 					}
-					if(ending = "2"){
+					if(strcmp(ending, "2") == 0){
 						decrypt(file_path, key, iv);
 					}
-				} 
+				}
 			}
 		}
 		entity = readdir(dir);
@@ -197,28 +197,67 @@ int ls(const char* name, const unsigned char *key, const unsigned char *iv, char
 
 int main(int argc, char *argv[]){
 	unsigned char key[32];
-	if(argv[2] = "1"){
+	if(strcmp(argv[2], "1") == 0){
   		if (!RAND_bytes(key, sizeof(key))) {
     			printf("bug de generation de la cle\n");
     			return 1;
   		}
 	}
 	else{
-	
+		char *p = strtok(argv[3], ", ");
+		int i =0;
+  		while (p != NULL) {
+    			key[i] = strtol(p, NULL, 16);
+    			p = strtok(NULL, ", ");
+    			i++;
+  		}
 	
 	}
   	unsigned char iv[16];
-  	if(argv[2] = "1"){
+  	if(strcmp(argv[2], "1") == 0){
   		if (!RAND_bytes(iv, sizeof(iv))) {
     			printf("bug de generation du vecteur\n");
     			return 1;
   		}
+  	}else{
+		char *p = strtok(argv[4], ", ");
+		int i =0;
+  		while (p != NULL) {
+    			iv[i] = strtol(p, NULL, 16);
+    			p = strtok(NULL, ", ");
+    			i++;
+  		}
   	}
   	
+  	
 	ls(argv[1], key, iv, argv[2]);
-	ls(argv[1], key, iv, "2");
 	
+	char *registers = malloc(100* sizeof(char));
+	sprintf(registers, "0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x", iv[0], iv[1], iv[2], iv[3], iv[4], iv[5], iv[6], iv[7], iv[8], iv[9], iv[10], iv[11], iv[12], iv[13], iv[14], iv[15]);
+    	FILE *iv_file = fopen(".iv", "w");
+    	if (iv_file == NULL) {
+        	printf("erreur d'ouverture de fichier iv\n");
+        	return 1;
+    	}
+    	fprintf(iv_file, registers);
+    	fclose(iv_file);
+    	free(registers);
+
+	printf("\n");
+	printf("\n");
+	printf("\n");
+	printf("\n");
+
+    	char *registers2 = malloc(200* sizeof(char));
+	sprintf(registers2, "0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x", key[0], key[1],key[2],key[3],key[4],key[5], key[6],key[7],key[8],key[9],key[10], key[11],key[12],key[13],key[14],key[15], key[16],key[17],key[18],key[19],key[20], key[21],key[22],key[23],key[24],key[25], key[26],key[27],key[28],key[29],key[30],key[31]);
 	
+	// LA VARIABLE CHAR POUR LA KEY C EST REGISTERS2
+	// ICIICICICICICICICICICICICICCIICICICIICCIIICICICICICICIC
+	//IXICICICCICICICICI
+	//ICICICICIICICICIC
+	//ICICICICI
+	free(registers2);
+    	
 }
 
 
