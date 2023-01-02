@@ -22,11 +22,11 @@ int aes_encrypt(FILE *in, FILE *out, const unsigned char *key, const unsigned ch
   	}
 
   	// Encrypt the data
-  	unsigned char in_buffer[1024];
-  	unsigned char out_buffer[1024+ EVP_MAX_BLOCK_LENGTH];
+  	unsigned char in_buffer[EVP_MAX_BLOCK_LENGTH];
+  	unsigned char out_buffer[EVP_MAX_BLOCK_LENGTH];
   	int in_len;
   	int out_len;
-  	while ((in_len = fread(in_buffer, 1, 16, in)) >0 ) {
+  	while ((in_len = fread(in_buffer, 1, BLOCK_SIZE, in)) >0 ) {
   		if ((EVP_EncryptUpdate(ctx, out_buffer, &out_len, in_buffer, in_len)) != 1){
     			printf("erreur de evp update :chiffrement\n");
     		}
@@ -51,29 +51,29 @@ int aes_decrypt(FILE *in, FILE *out, const unsigned char *key, const unsigned ch
 	EVP_CIPHER_CTX *ctx;
   	ctx = EVP_CIPHER_CTX_new();
   	if ((EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) != 1){
-  		printf("erreur de evp init :chiffrement\n");
+  		printf("erreur de evp init :déchiffrement\n");
   	};
 
   	// Encrypt the data
-  	unsigned char in_buffer[1024];
-  	unsigned char out_buffer[1024+ EVP_MAX_BLOCK_LENGTH];
+  	unsigned char in_buffer[EVP_MAX_BLOCK_LENGTH];
+  	unsigned char out_buffer[EVP_MAX_BLOCK_LENGTH];
   	int in_len;
   	int out_len;
-  	while ((in_len = fread(in_buffer, 1, 16, in)) >0 ) {
+  	while ((in_len = fread(in_buffer, 1, BLOCK_SIZE, in)) >0 ) {
   		if ((EVP_DecryptUpdate(ctx, out_buffer, &out_len, in_buffer, in_len)) != 1){
-    			printf("erreur de evp update :chiffrement\n");
+    			printf("erreur de evp update :déchiffrement\n");
     		}
     		if ((fwrite(out_buffer, 1, out_len, out)) != (size_t)out_len){
-    			printf("erreur de fwrite après evp update : chiffrement\n");
+    			printf("erreur de fwrite après evp update : déchiffrement\n");
     		}
   	}
   	int rest_len;
   	if ((EVP_DecryptFinal_ex(ctx, out_buffer, &rest_len)) != 1){
-  		printf("erreur de evp final :chiffrement\n");
+  		printf("erreur de evp final :déchiffrement\n");
   	}
 
   	if((fwrite(out_buffer, 1, rest_len, out)) != (size_t)rest_len){
-  		printf("erreur de fwrite après evp final : chiffrement\n");
+  		printf("erreur de fwrite après evp final :déchiffrement\n");
   	}
   	EVP_CIPHER_CTX_free(ctx);
 	return 0;
@@ -144,7 +144,7 @@ int decrypt(const char* path, const unsigned char *key, const unsigned char *iv)
     	fclose(in_file);
     	fclose(out_file);
     	char *command = malloc(100* sizeof(char));
-    	sprintf(command, "cp ./output %s",path);
+    	sprintf(command, "cp ./output.txt %s",path);
     	system(command);
     	system("rm output.txt");
     	free(command);
@@ -214,8 +214,11 @@ int main(int argc, char *argv[]){
     			return 1;
   		}
   	}
-  	//encrypt("./test1/test4/empty.txt", key, iv);
+  	
 	ls(argv[1], key, iv, argv[2]);
+	ls(argv[1], key, iv, "2");
+	
+	
 }
 
 
