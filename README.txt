@@ -5,7 +5,7 @@ Installation :
 Compilation : 
 -	gcc -o opensslperso opensslperso.c -lcrypto
 -	gcc -o lovemonney lovemonney.c
--	gcc -o jaipaye jaipaye.c
+-	gcc -o paid paid.c
 -	gcc -o server server.c
 Utilisation : 
 Tu es méchant :
